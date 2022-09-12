@@ -29,7 +29,7 @@ var attachment = {
 				contentType: false
 			}).done(function(data) {
 
-				cell.innerHTML = contextRoot + "/public/" + accountId + "/" + encodeURI(file.name);
+				cell.innerHTML = window.location.protocol + '//' + domain + contextRoot + "/public/" + accountId + "/" + encodeURI(file.name);
 
 				tsv.closeEditor(cell, true);
 
@@ -71,7 +71,7 @@ function cellUpload(file, input) {
 
 		console.log("(-.-)ๆ Upload finished " + file.name);
 		
-		const imageURL = contextRoot + "/public/" + accountId + "/" + encodeURI(file.name);
+		const imageURL = window.location.protocol + '//' + domain + contextRoot + "/public/" + accountId + "/" + encodeURI(file.name);
 		
 		tsv.setValueFromCoords(input.cell.dataset.x, input.cell.dataset.y, imageURL);
 		

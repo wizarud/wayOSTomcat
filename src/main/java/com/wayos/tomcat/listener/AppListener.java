@@ -10,7 +10,6 @@ import javax.servlet.http.HttpSessionListener;
 
 import org.json.JSONObject;
 
-import com.wayos.Configuration;
 import com.wayos.PathStorage;
 import com.wayos.connector.SessionPool;
 import com.wayos.connector.BLESessionPoolFactory;
@@ -30,8 +29,10 @@ public class AppListener implements ServletContextListener, HttpSessionListener 
 		
 		TimeZone.setDefault(TimeZone.getTimeZone("GMT+7"));
 		
-		//TODO: createStorage(storageImplName);
-		PathStorage storage = new DirectoryStorage("/Users/apple/Downloads/wayOS");
+		/**
+		 * Use ${storagePath}${contextPath} as home directory for /libs, /private, /public, /vars, /users
+		 */
+		PathStorage storage = new DirectoryStorage(System.getenv("storagePath") + sce.getServletContext().getContextPath());
 		
 		ConsoleUtil consoleUtil = new ConsoleUtil(storage);
 		

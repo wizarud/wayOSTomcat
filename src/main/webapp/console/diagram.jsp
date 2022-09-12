@@ -254,8 +254,8 @@
 	              contentType: false
 	            }).done(function(data) {
 	            	
-	            	const path = 'https://' + window.location.hostname + '/public/' + accountId + '/' + encodeURI(file.name);
-	            	    		    		
+	            	const path = window.location.protocol + '//' + domain + contextRoot + '/public/' + accountId + '/' + encodeURI(file.name);
+	            	
 		    		figure.setHooks('');
 		    		figure.addResponse(path, false);    		    			    	    		  		    		      		    		  
 	            	

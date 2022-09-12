@@ -6,7 +6,7 @@ function updateTable(instance, cell, col, row, val, label, cellName) {
 		
 		const test = val.toLowerCase();
 
-		if (test.startsWith("https://") && (test.endsWith("jpg") || test.endsWith("jpeg") || test.endsWith("png"))) {
+		if (test.startsWith("https://") || test.startsWith("http://") && (test.endsWith("jpg") || test.endsWith("jpeg") || test.endsWith("png"))) {
 			
 			cell.innerHTML = "<img src=\"" + val + "\" style=\"width:300px;\">";
 		}

@@ -1,11 +1,14 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <!DOCTYPE html>
 <html>
+<%
+	String imgPath = request.getParameter("img");
+%>
 <head>
 <meta charset="UTF-8">
 <link rel="stylesheet" href="css/wayos.css" />
 <style type="text/css">
-body, div.vertical-center, p {
+div.vertical-center, p {
 	touch-action: none;
 }
 .wayos_image_head {
@@ -28,6 +31,30 @@ body, div.vertical-center, p {
 	-ms-transform: translateY(-50%);
 	transform: translateY(-50%);
 }
+.vertical-bottom {
+	margin: 0;
+	position: absolute;
+	width: 100%;
+	bottom: 0;
+}
+
+<% if (imgPath!=null) { %>
+
+body {
+  /* The image used */
+  background-image: url("<%= imgPath %>");
+
+  /* Full height */
+  height: 100vh; 
+
+  /* Center and scale the image nicely */
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+
+<% } %>
+
 </style>
 <script>
 
@@ -42,5 +69,32 @@ document.head.appendChild(style);
 <body style="margin: 0px !important;">
 <div id="content" class="vertical-center">
 </div>
+
+<% if (imgPath!=null) { %>
+<script>
+	window.onload = function (e) {
+		if (parent && parent.wayOS) {
+			
+			const image = new Image();
+			image.onload = function () {
+				//parent.wayOS.adjustFrameHeight(this.width, this.height);
+				if (parent.wayOS.next) {
+					
+					//Add more delay for image display
+					setTimeout(function() {
+						
+						parent.wayOS.next();
+						delete parent.wayOS.next;
+						
+					}, 2500);
+				}
+			}
+			
+			image.src = "<%= imgPath %>";
+			
+		}
+	}
+</script>
+<% } %>
 </body>
 </html>

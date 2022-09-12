@@ -1,5 +1,5 @@
 <%@ page contentType="text/html" pageEncoding="UTF-8"%>
-<%@ page import="java.util.*,  org.json.JSONObject, com.wayos.Context, com.wayos.util.Application, com.wayos.connector.SessionPool" %>
+<%@ page import="java.util.*,  org.json.JSONObject, com.wayos.*, com.wayos.util.Application, com.wayos.connector.SessionPool" %>
 <!doctype html>
 <!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang=""> <![endif]-->
 <!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8" lang=""> <![endif]-->
@@ -11,8 +11,7 @@
 <head>
 <title>WAYOS</title>
 <% 
-	String contextRoot = System.getenv("contextRoot") == null ? "" : "/" + System.getenv("contextRoot");
-
+	String contextRoot = application.getContextPath();
 	String accountId = (String) request.getAttribute("accountId");
 	String botId = (String) request.getAttribute("botId");	
 	JSONObject properties = (JSONObject) request.getAttribute("props");
@@ -49,6 +48,8 @@
 						
 		} catch (Exception e) {
 			
+			throw new RuntimeException(e);
+			
 		}
 				
 		isShowcase = true;
@@ -56,6 +57,7 @@
 %>
 
 <script>
+var domain = '<%= Configuration.domain %>';
 var contextRoot = '<%= contextRoot %>';
 </script>
 
@@ -109,9 +111,9 @@ body, div, section, iframe {
 <meta property="og:type" content="website" />
 <meta property="og:title" content="<%= properties.optString("title") %>" />
 <meta property="og:description" content="<%= properties.optString("description") %>" />
-<meta property="og:url" content="https://<%= request.getServerName() %>/x/<%= accountId %>/<%= botId %>" />
-<meta property="og:image" content="https://<%= request.getServerName() %>/public/<%= accountId %>/<%= botId %>.PNG" />
-<meta property="og:image:alt" content="https://<%= request.getServerName() %>/images/gigi.png" />
+<meta property="og:url" content="<%= request.getScheme() + "://" + Configuration.domain + contextRoot %>/x/<%= accountId %>/<%= botId %>" />
+<meta property="og:image" content="<%= request.getScheme() + "://" + Configuration.domain + contextRoot %>/public/<%= accountId %>/<%= botId %>.PNG" />
+<meta property="og:image:alt" content="<%=  request.getScheme() + "://" + Configuration.domain + contextRoot %>/images/gigi.png" />
 
 </head>
 <body>
@@ -203,24 +205,6 @@ body, div, section, iframe {
 		}
 	}
 	
-	wayOS.onRing = function(accountId, botId, success) {
-		
-		let frame = document.getElementById("wayos-frame");
-		if (frame) {
-			const src = frame.src;
-			frame.onload = function() {
-				if (success) {
-					success();
-				}
-				this.onload = null;
-			}
-			frame.onerror = function () {
-				this.src = src;
-			}
-			frame.src = contextRoot + "/canvas.jsp?img=" + contextRoot + "/media/" + accountId + "/" + botId;
-		}
-	}
-	
 	wayOS.onDisplayImage = function(imageURL, next) {
 		
 		let frame = document.getElementById("wayos-frame");
@@ -244,9 +228,8 @@ body, div, section, iframe {
 			}
 			frame.onerror = function () {
 				this.src = src;
-			}
-			
-			frame.src = contextRoot + "/canvas.jsp?img=" + encodeURIComponent(imageURL);
+			}			
+			frame.src = contextRoot + "/panel.jsp?img=" + encodeURIComponent(imageURL);
 		}
 		
 	}
@@ -295,7 +278,16 @@ body, div, section, iframe {
 		if (frame) {
 			const src = frame.src;
 			frame.onload = function() {
-				this.contentDocument.body.innerHTML = "<div align=\"center\" class=\"vertical-center\"><p>" + innerHTML.replace(/width: 80/g, "width: 50") + "</p></div>";
+				
+				//Slide Menus
+				if (innerHTML.indexOf("inline-block")!==-1) {
+					this.contentDocument.body.innerHTML = "<div align=\"center\" class=\"vertical-center\"><p>" + innerHTML.replace(/width: 80/g, "width: 50") + "</p></div>";					
+				} 
+				//Single Menu
+				else {
+					this.contentDocument.body.innerHTML = "<div align=\"center\" class=\"vertical-bottom\"><p>" + innerHTML + "</p></div>";
+				}
+				
 				this.style.width = "100%";
 				this.style.height = FRAME_HEIGHT;
 				this.onload = null;
@@ -312,6 +304,12 @@ body, div, section, iframe {
 			frame.onerror = function () {
 				this.src = src;
 			}
+			
+			if (src) {
+				frame.src += '';
+				return;
+			}
+			
 			frame.src = contextRoot + "/panel.jsp";
 		}
 		
@@ -336,6 +334,12 @@ body, div, section, iframe {
 			frame.onerror = function () {
 				this.src = src;
 			}
+			
+			if (src) {
+				frame.src += '';
+				return;
+			}
+			
 			frame.src = contextRoot + "/panel.jsp";
 		}
 		
@@ -364,60 +368,45 @@ body, div, section, iframe {
 			
 			if (!text) return;
 			
-		    let urls = text.match(/(http(s?):)([/|.|\w|\s|-])*(\?.*)?/g);
-		        
+			console.log("Show:" + text);
+			
 		    //if (text.indexOf('<div style="overflow: auto; white-space: nowrap;">')!==-1) {
 			 if (text.indexOf('<div')!==-1) {
 		        	
 		    	this.onDisplayCatalog(text, next);
 		    	
-		    } else if (text.indexOf(".jpg")!=-1 || text.indexOf(".jpeg")!=-1 || text.indexOf(".gif")!=-1 || text.indexOf(".png")!=-1 || text.indexOf("type=png")!=-1) {
-	        		
-		        this.onDisplayImage(text, next);
-		    
-		    } else if (urls!=null && urls.length > 0) {
+		    } else if (text.startsWith("https://") || text.startsWith("http://")) {
 		    	
- 		        //let imageURLS = text.match(/(http(s?):)([/|.|\w|\s|-])*\.(?:jpg|jpeg|JPG|JPEG|gif|GIF|png|PNG)/g);
- 		        let url;
- 		        
- 		        for (let i in urls) {
+	        	var checkTxt = text.toLowerCase();
+	        	
+	        	if (checkTxt.endsWith("jpg") || checkTxt.endsWith("jpeg") || checkTxt.endsWith("png")) {
+	        	
+			        this.onDisplayImage(text, next);
+			        
+	        	} else if (checkTxt.endsWith("gif")) {
+	        		
+ 		        	this.onDisplayImageInFrame(text, next);
  		        	
- 		        	url = urls[i];
- 		        	
- 		        	if (url.startsWith("https://www.youtube.com/watch?v=")) {
+	        	} else if (text.startsWith("https://www.youtube.com/watch?v=")) {
  		        		
- 		        		let x = url.replace("https://www.youtube.com/watch?v=", "");
+ 		        	let x = text.replace("https://www.youtube.com/watch?v=", "");
  		        		
- 		        		if (x.indexOf(" target")>0) {
+ 		        	if (x.indexOf(" target")>0) {
  		        			
- 		        			this.onDisplayYoutube(x.substr(0, x.indexOf(" target") - 1), next);
+ 		        		this.onDisplayYoutube(x.substr(0, x.indexOf(" target") - 1), next);
  		        			
- 		        		} else {
+ 		        	} else {
  		        			
- 		        			this.onDisplayYoutube(x, next);
+ 		        		this.onDisplayYoutube(x, next);
  		        			
- 		        		}
- 		        		
- 		        	} else if (url.startsWith("https://i3.ytimg.com/vi/")) {
- 		        		
-		        		this.onDisplayYoutube(url.replace("https://i3.ytimg.com/vi/", "").replace("/maxresdefault.jpg", ""), next);
- 		        		
- 		        	} else if (url.indexOf(".jpg")!=-1 || url.indexOf(".jpeg")!=-1 || url.indexOf(".gif")!=-1 || url.indexOf(".png")!=-1 || url.indexOf("type=png")!=-1) {
-
-	 		        	this.onDisplayImage(url, next);
-	 		        	
- 		        	} /*else if (url.indexOf(".mp3")==-1 && url.indexOf(".m4a")==-1 && url.indexOf(".mp4")==-1) {
- 		        		
-	 		        	this.wayOS.onDisplayWeb(url, next);
-	 		        	
- 		        	} */
- 		        	 else {
- 		        		
- 		 		      this.onDisplayText(text, next);
- 		        		
  		        	}
+ 		        		
+ 		        } else if (text.startsWith("https://i3.ytimg.com/vi/")) {
+ 		        		
+		        	this.onDisplayYoutube(url.replace("https://i3.ytimg.com/vi/", "").replace("/maxresdefault.jpg", ""), next);
+ 		        		
  		        }
- 		         		        
+
 		    } else {
 		    	
 		      this.onDisplayText(text, next);
@@ -484,6 +473,10 @@ body, div, section, iframe {
  		    if(xhr.status === 200) {
  		    	 	            
  		    	showLoading(false);
+ 		    	
+ 		    	console.log("Response Start: ");
+ 		    	console.log(xhr.responseText);
+ 		    	console.log("Response End: ");
  		    	
  		    	this.animateResponseText(xhr.responseText);
  		    	
@@ -680,7 +673,7 @@ body, div, section, iframe {
 	
 	wayOS.quickLoad = function() {
 		
-		const props = '<%=properties%>';
+		const props = '<%=properties.toString().replace("'", "\\'")%>';
 		
 		this.applyTheme(JSON.parse(props));
  	  		

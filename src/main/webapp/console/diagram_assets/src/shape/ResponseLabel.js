@@ -185,7 +185,7 @@ limz_ResponseLabel = draw2d.shape.basic.Label.extend({
     	}
 		
         //Append Thumbnail if txt is the resource from WAYOBOT or external link
-        if (txt.startsWith("https://")) {
+        if (txt.startsWith("https://") || txt.startsWith("http://")) {
         	
         	var checkTxt = txt.toLowerCase();
         	        	

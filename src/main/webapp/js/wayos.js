@@ -33,13 +33,14 @@ function overlayOn(id) {
 function overlayOff(id) {
 	
 	if (!id) {
-		var overlayIds = ['login'];
+		var overlayIds = ['login', 'register'];
 		var overlay;
 		for (var i in overlayIds) {
 			overlay = document.getElementById(overlayIds[i]);
 			if (overlay) 
 				overlay.style.display = "none";
 		}
+		return;
 	}
 	
     document.getElementById(id).style.display = "none";

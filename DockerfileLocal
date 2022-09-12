@@ -1,0 +1,24 @@
+FROM tomcat:9.0
+
+ENV brainySecret=P@ndapinkla0
+ENV domain=localhost:88
+ENV facebook_apiVersion=v14.0
+ENV facebook_appId=1086491091973238
+ENV facebook_appSecret=6b92aef0ac48896b17cad01db499c550
+ENV showcaseAccountId=admin
+ENV showcaseBotId=default
+
+# For ROOT.war
+
+ENV storagePath=/usr/local/wayOS
+
+RUN mkdir -p ${storagePath}/libs/admin/
+RUN mkdir -p ${storagePath}/public/admin/
+
+COPY default.context ${storagePath}/libs/admin/
+COPY default.PNG ${storagePath}/public/admin/
+COPY admin.json ${storagePath}/users/
+
+COPY ROOT.war /usr/local/tomcat/webapps/
+
+CMD ["catalina.sh", "run"]

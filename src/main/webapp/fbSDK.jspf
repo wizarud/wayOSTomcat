@@ -123,7 +123,8 @@
 	  
 	  function relocate() {
 		  
-		  window.location.href = contextRoot;
+		  //window.location.href = contextRoot;
+		  window.location.href = window.location.protocol + '//' + domain + contextRoot;
 	  };
 	  
 	  function logout() {
